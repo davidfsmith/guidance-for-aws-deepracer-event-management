@@ -19,6 +19,7 @@ import { ClamscanServerless } from './constructs/clamscan-serverless';
 import { CwRumAppMonitor } from './constructs/cw-rum';
 import { EventsManager } from './constructs/events-manager';
 import { FleetsManager } from './constructs/fleets-manager';
+import { GGManager } from './constructs/greengrass';
 import { LabelPrinter } from './constructs/label-printer';
 import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
@@ -164,6 +165,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       userPoolId: props.userPool.userPoolId,
       eventbus: props.eventbus,
     });
+
+    new GGManager(this, 'GGManager');
 
     const streamingOverlay = new StreamingOverlay(this, 'streamingOverlay', {
       logsBucket: props.logsBucket,
