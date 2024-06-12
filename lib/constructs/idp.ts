@@ -80,6 +80,27 @@ export class Idp extends Construct {
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
     });
 
+    const post_confirmation_user_profile_create_lambda = new StandardLambdaPythonFunction(
+      this,
+      'post_confirmation_user_profile_create_lambda',
+      {
+        entry: 'lib/lambdas/cognito_triggers/',
+        description: 'Cognito user profile create lambda',
+        handler: 'post_confirmation_user_profile_create_lambda',
+        runtime: props.lambdaConfig.runtime,
+        architecture: props.lambdaConfig.architecture,
+        environment: {
+          eventbus_name: props.eventbus.eventBusName,
+          default_user_group: 'racer',
+          POWERTOOLS_SERVICE_NAME: 'cognito_post_confirmation_lambda',
+        },
+        bundling: {
+          image: props.lambdaConfig.bundlingImage,
+        },
+        layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+      }
+    );
+
     const userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: stack.stackName,
       standardAttributes: {
@@ -121,6 +142,7 @@ export class Idp extends Construct {
       lambdaTriggers: {
         preSignUp: pre_sign_up_lambda,
         preTokenGeneration: pre_token_generation_lambda,
+        postConfirmation: post_confirmation_user_profile_create_lambda,
       },
     });
 

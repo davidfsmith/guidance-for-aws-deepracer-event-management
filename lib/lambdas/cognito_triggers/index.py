@@ -86,3 +86,10 @@ def pre_sign_up_handler(event: dict, context: LambdaContext) -> str:
     except Exception as error:
         logger.exception(error)
         return http_response.response(500, error)
+
+
+@logger.inject_lambda_context
+def post_confirmation_user_profile_create_lambda(
+    event: dict, context: LambdaContext
+) -> str:
+    return event
