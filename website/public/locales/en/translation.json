@@ -635,7 +635,8 @@
     "users": "Users",
     "operator": "Operator",
     "beta": "Beta",
-    "upload-to-car-status": "Upload status"
+    "upload-to-car-status": "Upload status",
+    "racer-stats": "Racer statistics"
   },
   "upload.chose-file": "Upload model",
   "upload.header": "Upload models",
@@ -733,5 +734,10 @@
     "upload-time.header": "Upload times",
     "upload-time.x-title": "Time (UTC)",
     "upload-time.y-title": "Seconds"
+  },
+  "racer-stats": {
+    "header": "Racer statistics",
+    "description": "See your race history in detail",
+    "breadcrumb": "Racer statistics."
   }
 }

@@ -38,6 +38,7 @@ import { useRacesApi } from '../hooks/useRacesApi';
 import { useUsersApi } from '../hooks/useUsersApi';
 import { useWindowSize } from '../hooks/useWindowsSize';
 import { ModelManagement } from '../pages/model-management/modelManagement';
+import { RacerStats } from '../pages/racer-stats/racerStats';
 import { Timekeeper } from '../pages/timekeeper/timeKeeper';
 import { TimekeeperWizard } from '../pages/timekeeper/timeKeeperWizard';
 import { UserManagement } from '../pages/user-manager/userManagement';
@@ -66,6 +67,7 @@ const defaultRoutes = [
   <Route path="*" element={<Home />} />,
   <Route path="/user/profile" element={<ProfileHome />} />,
   <Route path="/models/view" element={<ModelManagement />} />,
+  <Route path="/racer_stats/view" element={<RacerStats />} />,
 ];
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
@@ -146,6 +148,12 @@ export function TopNav(props) {
       type: 'link',
       text: t('topnav.models-own'),
       href: '/models/view',
+    },
+    {
+      type: 'link',
+      text: t('topnav.racer-stats'),
+      info: <Badge color="blue">Beta</Badge>,
+      href: '/racer_stats/view',
     },
   ];
 
