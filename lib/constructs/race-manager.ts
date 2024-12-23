@@ -327,6 +327,7 @@ export class RaceManager extends Construct {
         },
         returnType: raceObjectType.attribute({ isList: true }),
         dataSource: raceDataSource,
+        directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator', 'commentator')], // TODO anyone who is logged in should have access to this
       })
     );
 
