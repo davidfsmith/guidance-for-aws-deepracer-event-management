@@ -318,6 +318,18 @@ export class RaceManager extends Construct {
       })
     );
 
+    // Racer statistics
+    props.appsyncApi.schema.addQuery(
+      'getRacerStatistics',
+      new ResolvableField({
+        args: {
+          userId: GraphqlType.string({ isRequired: true }),
+        },
+        returnType: raceObjectType.attribute({ isList: true }),
+        dataSource: raceDataSource,
+      })
+    );
+
     // OVERLAY METHODS
     const raceStatusEnum = new EnumType('RaceStatusEnum', {
       definition: [
