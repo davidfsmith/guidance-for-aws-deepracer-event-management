@@ -59,6 +59,12 @@ export class RaceManager extends Construct {
       pointInTimeRecovery: true,
     });
 
+    raceTable.addGlobalSecondaryIndex({
+      indexName: 'userId-index',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+    });
+
     // BACKEND
     const raceLambda = new StandardLambdaPythonFunction(this, 'raceLambda', {
       entry: 'lib/lambdas/race_api/',
