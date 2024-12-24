@@ -52,6 +52,20 @@ def getRaces(eventId):
     return race_object_list
 
 
+@app.resolver(type_name="Query", field_name="getRacerStatistics")
+def getRacerStatistics(userId):
+    response = {}
+
+    response = ddbTable.query(
+        KeyConditionExpression=Key("userId").eq(userId),
+        FilterExpression=Attr("type").eq(RACE_TYPE),
+    )
+
+    race_object_list = response["Items"]
+    logger.info(race_object_list)
+    return race_object_list
+
+
 @app.resolver(type_name="Mutation", field_name="deleteRaces")
 def deleteRaces(eventId, racesToDelete):
     event_id = eventId
