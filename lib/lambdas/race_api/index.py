@@ -57,6 +57,7 @@ def getRacerStatistics(userId):
     response = {}
 
     response = ddbTable.query(
+        IndexName="userId-index",
         KeyConditionExpression=Key("userId").eq(userId),
         FilterExpression=Attr("type").eq(RACE_TYPE),
     )
