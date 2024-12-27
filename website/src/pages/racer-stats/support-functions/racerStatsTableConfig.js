@@ -21,6 +21,10 @@ export const ColumnConfiguration = () => {
             id: 'raceId',
             label: i18next.t('raceId'),
           },
+          {
+            id: 'lapsCount',
+            label: i18next.t('lapsCount'),
+          },
         ],
       },
     ],
@@ -42,6 +46,12 @@ export const ColumnConfiguration = () => {
         header: i18next.t('racer-stats.raceId'),
         cell: (item) => item.raceId || '-',
         sortingField: 'raceId',
+      },
+      {
+        id: 'lapsCount',
+        header: i18next.t('racer-stats.lapsCount'),
+        cell: (item) => item.laps.length || '-',
+        sortingField: 'lapsCount',
       },
     ],
   };
