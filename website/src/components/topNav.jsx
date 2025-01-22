@@ -28,6 +28,7 @@ import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
 import { CommentatorStats } from '../commentator/commentator-stats';
 import { Home } from '../home';
+import { useCarLogsApi } from '../hooks/useCarLogsApi';
 import { useCarsApi } from '../hooks/useCarsApi';
 import { useEventsApi } from '../hooks/useEventsApi';
 import { useFleetsApi } from '../hooks/useFleetsApi';
@@ -37,6 +38,7 @@ import { usePermissions } from '../hooks/usePermissions';
 import { useRacesApi } from '../hooks/useRacesApi';
 import { useUsersApi } from '../hooks/useUsersApi';
 import { useWindowSize } from '../hooks/useWindowsSize';
+import { CarLogsManagement } from '../pages/car-logs-management/carLogsManagement';
 import { ModelManagement } from '../pages/model-management/modelManagement';
 import { RacerStats } from '../pages/racer-stats/racerStats';
 import { Timekeeper } from '../pages/timekeeper/timeKeeper';
@@ -68,6 +70,7 @@ const defaultRoutes = [
   <Route path="/user/profile" element={<ProfileHome />} />,
   <Route path="/models/view" element={<ModelManagement />} />,
   <Route path="/racer_stats/view" element={<RacerStats />} />,
+  <Route path="/models/assets" element={<CarLogsManagement />} />,
 ];
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
@@ -93,6 +96,10 @@ const operatorRoutes = [
   <Route
     path="/admin/models"
     element={<ModelManagement isOperatorView={true} onlyDisplayOwnModels={false} />}
+  />,
+  <Route
+    path="/admin/models/assets"
+    element={<CarLogsManagement isOperatorView={true} onlyDisplayOwnAssets={false} />}
   />,
 ];
 
@@ -132,6 +139,7 @@ export function TopNav(props) {
   useUsersApi(permissions.api.users);
   useRacesApi(permissions.api.races, selectedEvent.eventId);
   useCarsApi(permissions.api.cars);
+  useCarLogsApi(permissions.api.carLogs);
   useFleetsApi(permissions.api.fleets);
   useEventsApi(selectedEvent, setSelectedEvent, permissions.api.events);
   useModelsApi(permissions.api.allModels);
@@ -141,13 +149,21 @@ export function TopNav(props) {
   useEffect(() => {
     if (windowSize.width < 900) dispatch('SIDE_NAV_IS_OPEN', false);
     else if (windowSize.width >= 900) dispatch('SIDE_NAV_IS_OPEN', true);
-  }, [windowSize]);
+  }, [windowSize, dispatch]);
 
   const defaultSideNavItems = [
     {
-      type: 'link',
+      type: 'section',
       text: t('topnav.models-own'),
-      href: '/models/view',
+      items: [
+        { type: 'link', text: t('topnav.models'), href: '/models/view' },
+        {
+          type: 'link',
+          text: t('topnav.models-logsvideo'),
+          info: <Badge color="blue">{t('topnav.beta')}</Badge>,
+          href: '/models/assets',
+        },
+      ],
     },
     {
       type: 'link',
@@ -201,6 +217,12 @@ export function TopNav(props) {
               text: t('topnav.upload-to-car-status'),
               info: <Badge color="blue">{t('topnav.beta')}</Badge>,
               href: '/admin/upload_to_car_status',
+            },
+            {
+              type: 'link',
+              text: t('topnav.models-logsvideo'),
+              info: <Badge color="blue">{t('topnav.beta')}</Badge>,
+              href: '/admin/models/assets',
             },
           ],
         },
