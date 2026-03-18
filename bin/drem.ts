@@ -88,8 +88,6 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
     baseStackName: baseStack.stackName,
     cloudfrontDistribution: baseStack.cloudfrontDistribution,
     cloudfrontDomainNames: baseStack.cloudfrontDomainNames,
-    tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
-    tacSourceBucket: baseStack.tacSourceBucket,
     logsBucket: baseStack.logsBucket,
     lambdaConfig: baseStack.lambdaConfig,
     adminGroupRole: baseStack.idp.adminGroupRole,
