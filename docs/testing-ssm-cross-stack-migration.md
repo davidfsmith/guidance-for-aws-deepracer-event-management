@@ -64,7 +64,12 @@ make drem.clean
 ```
 
 This destroys the pipeline stack, waits for the infrastructure stack to delete, then
-waits for the base stack to delete. Expected duration: 15–30 minutes.
+empties and deletes the base stack. Expected duration: 15–30 minutes.
+
+> **Note:** The logs S3 bucket is configured to log access to itself. This causes
+> CloudFormation's auto-delete to fail because new log objects are written during
+> deletion. `make drem.clean` handles this automatically by disabling bucket logging
+> and emptying the bucket before triggering stack deletion.
 
 > **Verify:** All three stacks (`drem-pipeline-<label>`, `drem-backend-<label>-infrastructure`,
 > `drem-backend-<label>-base`) are gone in the CloudFormation console.

@@ -62,6 +62,16 @@ drem.clean:					## Teardown all DREM AWS resources (pipeline then app stacks, wa
 	@echo "--- Deleting infrastructure stack ---"
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region)
 	aws cloudformation wait stack-delete-complete --stack-name drem-backend-$(label)-infrastructure --region $(region)
+	@echo "--- Emptying logs bucket (logs to itself, blocks CDK auto-delete) ---"
+	@LOGS_BUCKET=$$(aws cloudformation describe-stack-resources \
+		--stack-name drem-backend-$(label)-base --region $(region) \
+		--query "StackResources[?LogicalResourceId=='logsBucket35870DE7'].PhysicalResourceId" \
+		--output text 2>/dev/null); \
+	if [ -n "$$LOGS_BUCKET" ]; then \
+		echo "Disabling logging and emptying s3://$$LOGS_BUCKET"; \
+		aws s3api put-bucket-logging --bucket $$LOGS_BUCKET --bucket-logging-status {} --region $(region); \
+		aws s3 rm s3://$$LOGS_BUCKET --recursive --region $(region); \
+	fi
 	@echo "--- Deleting base stack ---"
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region)
 	aws cloudformation wait stack-delete-complete --stack-name drem-backend-$(label)-base --region $(region)
