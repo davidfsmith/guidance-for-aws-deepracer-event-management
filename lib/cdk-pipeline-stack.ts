@@ -40,20 +40,6 @@ class InfrastructurePipelineStage extends Stage {
     });
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
-      cloudfrontDistribution: baseStack.cloudfrontDistribution,
-      cloudfrontDomainNames: baseStack.cloudfrontDomainNames,
-      logsBucket: baseStack.logsBucket,
-      lambdaConfig: baseStack.lambdaConfig,
-      adminGroupRole: baseStack.idp.adminGroupRole,
-      operatorGroupRole: baseStack.idp.operatorGroupRole,
-      commentatorGroupRole: baseStack.idp.commentatorGroupRole,
-      registrationGroupRole: baseStack.idp.registrationGroupRole,
-      authenticatedUserRole: baseStack.idp.authenticatedUserRole,
-      userPool: baseStack.idp.userPool,
-      identiyPool: baseStack.idp.identityPool,
-      userPoolClientWeb: baseStack.idp.userPoolClientWeb,
-      dremWebsiteBucket: baseStack.dremWebsitebucket,
-      eventbus: baseStack.eventbridge.eventbus,
     });
 
     this.distributionId = stack.distributionId;
