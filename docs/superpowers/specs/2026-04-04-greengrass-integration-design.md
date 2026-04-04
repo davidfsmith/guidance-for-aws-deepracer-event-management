@@ -42,6 +42,13 @@ Cars self-register using a shared claim certificate created at CDK deploy time. 
 - **Thing Group**: maps to DREM fleet. Components deploy to Thing Groups, so adding a car to a fleet auto-deploys all Greengrass components.
 - **Re-activation**: same hostname → existing Thing gets fresh certs, old ones revoked. Clean re-registration without orphan devices.
 
+### Chassis Serial — Captured for ALL Activations
+The chassis serial is read and stored during **every** activation, not just Greengrass activations. For SSM-only activations, it is stored as a tag on the SSM managed instance (`ChassisSerial`). This ensures:
+- Every car has a persistent identity from day one, regardless of activation type
+- If a car is later upgraded to Greengrass, its history is already linked by serial
+- Duplicate SSM entries for the same physical car can be detected and avoided
+- Relates to upstream issue [#17](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/17)
+
 ### Claim Certificate Storage
 Created at CDK deploy time, stored in SSM Parameter Store. The admin UI surfaces the IoT endpoint and claim cert in the activation command generator (same pattern as SSM activation code today).
 
@@ -104,18 +111,18 @@ Standard CloudWatch agent with custom config:
 ### Activation flow
 ```
 1. Existing steps (hostname, password, WiFi, tweaks) — unchanged
-2. SSM install + activate — unchanged
-3. If -g flag:
-   a. Read chassis serial from /sys/class/dmi/id/chassis_serial
-      (fall back to /proc/cpuinfo serial for RPi, or generate persistent UUID)
-   b. Install Greengrass Nucleus (download from AWS)
-   c. Write claim cert + key to /greengrass/v2/claim-certs/
-   d. Run fleet provisioning (Thing name = hostname, chassis serial as attribute)
-   e. Join Thing Group
-   f. Start Greengrass systemd service
-   g. Components auto-deploy from Thing Group deployment
-4. Log chassis serial to stdout for operator reference
-5. Reboot
+2. Read chassis serial from /sys/class/dmi/id/chassis_serial
+   (fall back to /proc/cpuinfo serial for RPi, or generate persistent UUID)
+3. SSM install + activate + tag instance with ChassisSerial
+4. If -g flag:
+   a. Install Greengrass Nucleus (download from AWS)
+   b. Write claim cert + key to /greengrass/v2/claim-certs/
+   c. Run fleet provisioning (Thing name = hostname, chassis serial as attribute)
+   d. Join Thing Group
+   e. Start Greengrass systemd service
+   f. Components auto-deploy from Thing Group deployment
+5. Log chassis serial to stdout for operator reference
+6. Reboot
 ```
 
 ### Re-activation (reflash)
