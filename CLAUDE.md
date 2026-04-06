@@ -50,6 +50,27 @@ make local.config.python     # Create venv + pip install -e .[dev]
 pytest                        # Run Python tests
 ```
 
+### Data Export/Import (`scripts/`)
+Requires the project venv (`make local.config.python` or `make venv`). Run from the repo root (where `build.config` and `cfn.outputs` live).
+
+```sh
+# Export from your own DREM instance (direct DynamoDB access)
+.venv/bin/python scripts/drem_export.py                              # full export
+.venv/bin/python scripts/drem_export.py --skip-users                 # data only
+.venv/bin/python scripts/drem_export.py --events evt-1,evt-2         # specific events
+
+# Export from a remote DREM instance (GraphQL API, no AWS access needed)
+.venv/bin/python scripts/drem_export.py --api --endpoint <URL> --token <JWT>
+
+# Import into your DREM instance
+.venv/bin/python scripts/drem_import.py --input ./drem-export-xxx/   # full import
+.venv/bin/python scripts/drem_import.py --input ./xxx/ --dry-run     # preview
+.venv/bin/python scripts/drem_import.py --input ./xxx/ --skip-users  # data only
+
+# Rebuild statistics after import (direct DDB writes bypass EventBridge)
+.venv/bin/python scripts/drem_rebuild_stats.py
+```
+
 ## Architecture
 
 ### Two CDK Stacks (deployed via `lib/`)
@@ -80,3 +101,87 @@ pytest                        # Run Python tests
 ### Public Frontends
 - **Leaderboard** (`website-leaderboard/`) — unauthenticated, subscribes to AppSync via API key for live data; supports URL query params for display (lang, QR, track, format, flag)
 - **Stream Overlays** (`website-stream-overlays/`) — unauthenticated, API key auth; uses D3.js for animated visualisations; supports chroma key background for broadcast use
+
+## Repository Context
+
+### Fork Structure
+- **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
+- **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
+- Current main is at **v3.0.1** (PRs #167 + #164 merged)
+
+### Upstream SSM Migration Chain (sequential, deploy-between-each)
+PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Terms & Conditions, and consolidate websites into a single CloudFront distribution. **Existing deployments must apply in order.**
+
+| Release | PRs | Status |
+|---------|-----|--------|
+| 3.0.1 | #167 (test infra) + #164 (SSM params + remove T&C frontend) | ✅ Merged |
+| 3.0.2 | #165 (switch infra to SSM, remove T&C CDK) | ⏳ Open, needs rebase |
+| 3.0.3 | #166 (restore base-first pipeline ordering) | ⏳ Open, needs rebase after #165 |
+| 3.0.4 | #168 (consolidate into single CloudFront) | ⏳ Open, needs rebase after #166 |
+
+### Independent Feature/Fix PRs (no dependencies on SSM chain)
+| PR | Title | Notes |
+|----|-------|-------|
+| #170 | feat(pipeline): configurable manual approval | Touches `cdk-pipeline-stack.ts`, `Makefile` |
+| #171 | feat: racer avatar, highlight colour, identity | Largest independent PR — needs #184 first |
+| #172 | feat: Pico W race display with OTA | New `pico-display/` dir |
+| #176 | fix(leaderboard): scroll to racer on submit | Leaderboard frontend only |
+| #177 | feat: data seed script | New `scripts/seed.py` |
+| #178 | feat(models): drag-and-drop upload | Single component swap |
+| #179 | feat: dark mode + compact density toggle | topNav + CSS only |
+| #180 | feat(race-admin): CSV export | New export utility |
+| #181 | fix(race-admin): track name + filter | Race admin frontend |
+| #182 | fix(overlays): align numbers + gap to leader | Stream overlays SVG/JS |
+| #183 | fix(timekeeper): auto timer status + layout | Timekeeper frontend |
+| #184 | fix(docker): node:20-alpine | **Merge before #171** |
+| #185 | fix: lazy-load user roles | Lambda + CDK + frontend |
+| #186 | feat: lap count racing | CDK schema + frontend + overlays |
+
+### Merge order notes
+- **#184** (Docker node:20) must merge **before** #171 (avatar)
+- #183 and #186 both touch `racePage*.tsx` — second to merge needs trivial rebase
+- All independent PRs are safe to merge before, during, or after the SSM migration
+
+## Current Work — Task Backlog
+
+### Pending tasks (16)
+
+| # | Task | Status |
+|---|------|--------|
+| 1 | AWS Greengrass integration | Spec done, blocked on SSM PRs |
+| 2 | Racer and event statistics | **Phase 1 built** — `feat/statistics` branch, deploying for test |
+| 3 | Real-time car performance data | Depends on #1 |
+| 4 | Comprehensive test coverage | |
+| 6 | Shared auth DREM + DRoA | Spec done, awaiting community input |
+| 8 | Race status light (DMX) | Parked |
+| 9 | F1-style overlays with telemetry | Depends on #1 + #29 |
+| 29 | Revise overlays to broadcast style | Spec done, blocked on PR #171 (avatar) |
+| 30 | Commentator display control tool | |
+| 33 | Public racer stats page | Part of stats (#2) Phase 2 |
+| 35 | Full export/import of DREM data | |
+| 36 | Migrate GraphQL codegen to TS | |
+| 37 | Real-time reset alert on pico | Depends on #39 |
+| 39 | Add reset detection to RPi timer | |
+| 40 | Racer queuing system | Spec done, awaiting pit crew/event feedback |
+| 41 | Auto-adopt SSM devices to fleet | Depends on #1 (Greengrass) |
+| 43 | Gap to faster racer | Part of #29 (overlay redesign) |
+| 45 | Consistent debug handler | |
+
+### Key dependency chains
+- **#1 (Greengrass)** blocks #3, #9, #41
+- **#29 (overlay redesign)** blocks #9, includes #43 — blocked on PR #171 (avatar)
+- **#39 (reset detection)** blocks #37
+- **#2 (stats)** Phase 1 → #33 (racer stats page is Phase 2)
+
+### Design specs completed (6)
+Greengrass, Statistics, Overlay Redesign, Lap Count (shipped), Shared Auth, Racer Queue
+Specs live on the `docs/design-specs` branch.
+
+### Statistics Engine — Phase 1 (Task #2)
+Branch `feat/statistics` implements the full Phase 1:
+- **CDK construct** (`lib/constructs/statistics.ts`): StatsTable (DynamoDB), EVB Lambda, API Lambda, AppSync schema
+- **EVB Lambda** (`lib/lambdas/stats_evb/`): triggered by `raceSummaryAdded/Updated/Deleted`, full-rebuild of global aggregates
+- **API Lambda** (`lib/lambdas/stats_api/`): AppSync resolver for `getGlobalStats` (API key auth, public)
+- **Frontend** (`website/src/pages/stats/globalDashboard.tsx`): `/stats` route with KPI cards, country bar chart, timeline, event type pie chart, fastest laps table
+- **Implementation plan:** `docs/superpowers/plans/2026-04-06-statistics-phase1.md`
+- Phase 2 will add per-racer profiles (`/racer/:username`) and Phase 3 adds per-event stats
