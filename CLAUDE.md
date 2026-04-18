@@ -107,7 +107,7 @@ Requires the project venv (`make local.config.python` or `make venv`). Run from 
 ### Fork Structure
 - **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
 - **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
-- Current main is at **v3.0.1** (PRs #167 + #164 merged)
+- Current main is at **v3.0.2** (PRs #164, #165, #167 merged)
 
 ### Upstream SSM Migration Chain (sequential, deploy-between-each)
 PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Terms & Conditions, and consolidate websites into a single CloudFront distribution. **Existing deployments must apply in order.**
@@ -204,3 +204,19 @@ Branch `feat/export-import` — upstream PR #187:
 - **Design spec:** `docs/superpowers/specs/2026-04-06-export-import-design.md`
 - **Implementation plan:** `docs/superpowers/plans/2026-04-06-export-import.md`
 - **Docs:** `scripts/README.md`
+### Cross-Stack Sharing Pattern
+
+`BaseStack` and `DeepracerEventManagerStack` share values exclusively via **SSM Parameter Store** — there are no CloudFormation `Fn::ImportValue` / `CfnOutput` cross-stack references between them. This means either stack can be updated independently and in any order without CloudFormation blocking on export dependencies.
+
+**How it works:**
+- `BaseStack` writes all shared resource identifiers to SSM under `/${stackName}/<key>` at the end of its constructor
+- `DeepracerEventManagerStack` reads them via `ssm.StringParameter.valueForStringParameter()` (resolved at CloudFormation deploy time, not synth time) and reconstructs CDK objects using `from*` static methods (`Role.fromRoleArn`, `EventBus.fromEventBusArn`, `Bucket.fromBucketName`, etc.)
+- `DeepracerEventManagerStack` only takes `baseStackName: string` as a cross-stack prop
+
+**When adding new resources to BaseStack that InfrastructureStack needs:**
+1. Write the resource identifier to SSM in `BaseStack` constructor
+2. Read it with `valueForStringParameter` in `DeepracerEventManagerStack` and reconstruct the CDK object
+3. Do NOT pass it as a constructor prop — this would recreate the `Fn::ImportValue` dependency
+
+**When removing resources from BaseStack:**
+Because there are no `Fn::ImportValue` dependencies, you can remove a resource from `BaseStack` and deploy in a single pipeline run without the "cannot delete export in use" error. Ensure `InfrastructureStack` no longer reads the corresponding SSM parameter in the same commit.
