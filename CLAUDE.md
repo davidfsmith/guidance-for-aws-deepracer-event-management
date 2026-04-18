@@ -115,8 +115,8 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 | Release | PRs | Status |
 |---------|-----|--------|
 | 3.0.1 | #167 (test infra) + #164 (SSM params + remove T&C frontend) | ✅ Merged |
-| 3.0.2 | #165 (switch infra to SSM, remove T&C CDK) | ⏳ Open, needs rebase |
-| 3.0.3 | #166 (restore base-first pipeline ordering) | ⏳ Open, needs rebase after #165 |
+| 3.0.2 | #165 (switch infra to SSM, remove T&C CDK) | ✅ Merged 2026-04-17 |
+| 3.0.3 | #166 (restore base-first pipeline ordering) | ⏳ Open, ready for rebase |
 | 3.0.4 | #168 (consolidate into single CloudFront) | ⏳ Open, needs rebase after #166 |
 
 ### Independent Feature/Fix PRs (no dependencies on SSM chain)
@@ -144,44 +144,63 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 
 ## Current Work — Task Backlog
 
-### Pending tasks (16)
+### Pending tasks (17)
 
-| # | Task | Status |
-|---|------|--------|
-| 1 | AWS Greengrass integration | Spec done, blocked on SSM PRs |
-| 2 | Racer and event statistics | **Phase 1 built** — `feat/statistics` branch, deploying for test |
-| 3 | Real-time car performance data | Depends on #1 |
-| 4 | Comprehensive test coverage | |
-| 6 | Shared auth DREM + DRoA | Spec done, awaiting community input |
-| 8 | Race status light (DMX) | Parked |
-| 9 | F1-style overlays with telemetry | Depends on #1 + #29 |
-| 29 | Revise overlays to broadcast style | Spec done, blocked on PR #171 (avatar) |
-| 30 | Commentator display control tool | |
-| 33 | Public racer stats page | Part of stats (#2) Phase 2 |
-| 35 | Full export/import of DREM data | |
-| 36 | Migrate GraphQL codegen to TS | |
-| 37 | Real-time reset alert on pico | Depends on #39 |
-| 39 | Add reset detection to RPi timer | |
-| 40 | Racer queuing system | Spec done, awaiting pit crew/event feedback |
-| 41 | Auto-adopt SSM devices to fleet | Depends on #1 (Greengrass) |
-| 43 | Gap to faster racer | Part of #29 (overlay redesign) |
-| 45 | Consistent debug handler | |
+| # | Task | Status | Upstream PR |
+|---|------|--------|-------------|
+| 1 | AWS Greengrass integration | Spec done, blocked on SSM PRs | |
+| 2 | Racer and event statistics | Phase 1 deployed + tested with 474 events | |
+| 3 | Real-time car performance data | Depends on #1 | |
+| 4 | Comprehensive test coverage | | #167 (test infra merged) |
+| 6 | Shared auth DREM + DRoA | Spec done, awaiting community input | |
+| 8 | Race status light (DMX) | Parked | |
+| 9 | F1-style overlays with telemetry | Depends on #1 + #29 | |
+| 29 | Revise overlays to broadcast style | Spec done, blocked on PR #171 (avatar) | |
+| 30 | Commentator display control tool | | |
+| 33 | Public racer stats page | Part of stats (#2) Phase 2 | |
+| 35 | Full export/import of DREM data | Built + tested, DDB + API modes | #187 |
+| 36 | Migrate GraphQL codegen to TS | | |
+| 37 | Real-time reset alert on pico | Depends on #39 | |
+| 39 | Add reset detection to RPi timer | | |
+| 40 | Racer queuing system | Spec done, awaiting pit crew/event feedback | |
+| 41 | Auto-adopt SSM devices to fleet | Depends on #1 (Greengrass) | |
+| 43 | Gap to faster racer | Part of #29 (overlay redesign) | |
+| 45 | Consistent debug handler | | |
+| 46 | Fix NULL trackId bug in getLeaderboard Lambda | Bug: `begins_with` on NULL trackId | |
 
 ### Key dependency chains
 - **#1 (Greengrass)** blocks #3, #9, #41
 - **#29 (overlay redesign)** blocks #9, includes #43 — blocked on PR #171 (avatar)
 - **#39 (reset detection)** blocks #37
 - **#2 (stats)** Phase 1 → #33 (racer stats page is Phase 2)
+- **PR #184** (Docker node:20) must merge before **PR #171** (avatar)
 
 ### Design specs completed (6)
 Greengrass, Statistics, Overlay Redesign, Lap Count (shipped), Shared Auth, Racer Queue
 Specs live on the `docs/design-specs` branch.
 
+### Follow-ups
+- **When PR #171 (avatar) merges:** update export/import tools (#35 / PR #187) to handle avatar config + highlight colour fields in Cognito user attributes and leaderboard entries
+- **When SSM migration lands (v3.0.4):** investigate pipeline build optimisation
+- **Stats `/stats` route** is currently behind the Cognito Authenticator — needs public (unauthenticated) access for Phase 2
+
 ### Statistics Engine — Phase 1 (Task #2)
-Branch `feat/statistics` implements the full Phase 1:
+Branch `feat/statistics` — deployed and tested with 474 events, 6,201 racers, 43 countries imported from the live DREM community instance:
 - **CDK construct** (`lib/constructs/statistics.ts`): StatsTable (DynamoDB), EVB Lambda, API Lambda, AppSync schema
 - **EVB Lambda** (`lib/lambdas/stats_evb/`): triggered by `raceSummaryAdded/Updated/Deleted`, full-rebuild of global aggregates
 - **API Lambda** (`lib/lambdas/stats_api/`): AppSync resolver for `getGlobalStats` (API key auth, public)
 - **Frontend** (`website/src/pages/stats/globalDashboard.tsx`): `/stats` route with KPI cards, country bar chart, timeline, event type pie chart, fastest laps table
+- **API key fix:** `generate_amplify_config_cfn.py` + `App.tsx` updated to pass `appsyncApiKey` to Amplify v6 config
 - **Implementation plan:** `docs/superpowers/plans/2026-04-06-statistics-phase1.md`
 - Phase 2 will add per-racer profiles (`/racer/:username`) and Phase 3 adds per-event stats
+
+### Export/Import Tools (Task #35)
+Branch `feat/export-import` — upstream PR #187:
+- **`scripts/drem_export.py`**: DDB mode (direct table scan) + API mode (`--api --endpoint --token` for remote DREM instances)
+- **`scripts/drem_import.py`**: full import with Cognito user creation, FORCE_CHANGE_PASSWORD, userId (sub) remapping across all tables
+- **`scripts/drem_rebuild_stats.py`**: triggers stats EVB Lambda after import (direct DDB writes bypass EventBridge)
+- **`scripts/drem_data/`**: shared library — discovery, table helpers, Cognito helpers, API client, manifest
+- **Tested:** exported 516 events, 11,305 races, 5,752 users from live DREM; imported into dev instance
+- **Design spec:** `docs/superpowers/specs/2026-04-06-export-import-design.md`
+- **Implementation plan:** `docs/superpowers/plans/2026-04-06-export-import.md`
+- **Docs:** `scripts/README.md`
