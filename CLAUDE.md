@@ -144,7 +144,7 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 
 ## Current Work — Task Backlog
 
-### Pending tasks (17)
+### Pending tasks (21)
 
 | # | Task | Status | Upstream PR |
 |---|------|--------|-------------|
@@ -166,7 +166,12 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 | 41 | Auto-adopt SSM devices to fleet | Depends on #1 (Greengrass) | |
 | 43 | Gap to faster racer | Part of #29 (overlay redesign) | |
 | 45 | Consistent debug handler | | |
-| 46 | Fix NULL trackId bug in getLeaderboard Lambda | Bug: `begins_with` on NULL trackId | |
+| 46 | Fix NULL trackId bug in getLeaderboard Lambda | Fix on `fix/leaderboard-null-trackid` | #195 (issue #194) |
+| 47 | Add TEST_EVENT type + exclude from stats | Deployed; 29 events marked as TEST_EVENT | #188 |
+| 48 | Nice formatted PDF of race results with DeepRacer logo | | |
+| 49 | Device management and deletion (ownership, soft delete, auto-cleanup) | Needs design spec — upstream issue #105 | |
+| 50 | Optimise CDK pipeline build/deploy speed | Deferred until v3.0.4 (website consolidation) | |
+| 51 | Migrate DREM charts to chart.js (keep CloudScape palette) | Unblocks dual-axis, crosshair sync, custom ticks | |
 
 ### Key dependency chains
 - **#1 (Greengrass)** blocks #3, #9, #41
