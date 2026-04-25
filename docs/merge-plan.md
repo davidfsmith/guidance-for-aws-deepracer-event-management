@@ -29,7 +29,7 @@ Results below; the Status column in the table reflects the outcome.
 | ✅ Already on v3.0.3a            | 11    | #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186 |
 | ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
 | ✅ Manual conflict resolved      | 2     | #170 (`Makefile` — kept `$(require_approval_arg)` injection), #171 (`lib/cdk-pipeline-stack.ts` — kept upstream's extracted-step refactor + branch's `--legacy-peer-deps`) |
-| ⚠️ Needs manual rebase           | 2     | #168, #172 (both: stale fork-only `CLAUDE.md` adds + likely more conflicts further along their long histories) |
+| ⏸ Deferred — recreate as fresh PR | 2 | #168, #172 (see "Recreation strategy" below) |
 
 **Notable findings from the audit:**
 
@@ -42,6 +42,39 @@ Results below; the Status column in the table reflects the outcome.
 - The earlier prediction of `bin/drem.ts` conflicts on #170/#171 was also misleading — once
   resolved, the actual files in conflict were `Makefile` and `lib/cdk-pipeline-stack.ts`
   respectively.
+
+### Recreation strategy for #168 + #172
+
+After rebase audit, #168 (consolidate-websites) was attempted via cherry-pick onto v3.0.3a
+and produced **5 conflict files in a single commit** (`46c91aa Consolidate leaderboard and
+overlays into main website`):
+
+| File | Conflict blocks | Notes |
+|---|---|---|
+| `Makefile` | 1 | New `local.build.*` targets — interrelated with `local.config` script-removal |
+| `jest.config.js` | 1 | Compiled output vs plain JS; entangled with the unrelated `7dce3a1 Convert jest config to TypeScript` cleanup commit |
+| `lib/cdk-pipeline-stack.ts` | 2 | Single-CloudFront restructure interleaves with v3.0.3a's `mainSiteDeployStep` extraction |
+| `lib/drem-app-stack.ts` | 2 | Removes Leaderboard + StreamingOverlay constructs |
+| `website/leaderboard/vitest.config.ts` | — | New file added |
+
+These are interrelated changes (Makefile build steps + script removals + CDK construct
+deletions + new vitest config) that need to be applied together coherently. Surgical
+conflict resolution risks producing a synth-clean but feature-broken state.
+
+**#172 (pico-display) has a hard dependency on #168** — pico modifies
+`website/leaderboard/src/components/raceInfoFooter.tsx` and `website/overlays/src/App.tsx`,
+which only exist after consolidation.
+
+**Plan:**
+
+1. **Deploy v3.0.3a as a fresh DREM environment** — clean baseline to test #168 against,
+   without prior fork state interfering with CFN drift / SSM params.
+2. **Recreate #168 from scratch** — new branch off `upstream/main` (= v3.0.3a). Apply the
+   consolidation feature manually (file-by-file from the existing #168) with the v3.0.3a
+   stack-level NAG suppressions, single mainSiteDeployStep, and current CDN/website
+   constructs in mind. Open as a new PR; close the old #168 as superseded.
+3. **Once recreated #168 is merged**, rebase #172 on top — most pico commits are
+   self-contained in `pico-display/` + new admin-page components and should replay clean.
 
 > **BREAKING CHANGE — Sequential upgrade required for existing deployments.**
 > Users with an existing deployment must apply PRs 1 → 2 → 3 → 4 **in order**, deploying each
@@ -101,7 +134,7 @@ proceeding to PR 3.
 | **PR**           | [#168](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/168)                                                                                                                                  |
 | **Title**        | Consolidate leaderboard and overlays into single CloudFront distribution (PR 4 of 4)                                                                                                                                                           |
 | **Dependencies** | Releases 3.0.1, 3.0.2, and 3.0.3 must be deployed first                                                                                                                                                                                       |
-| **Status**       | ⏳ Open — ready to rebase on v3.0.3 (has a `tsconfig.json` conflict when rebased on current main)                                                                                                                                               |
+| **Status**       | ⏸ Deferred — existing branch will be closed and the feature recreated as a fresh PR off `upstream/main` (v3.0.3a). See "Recreation strategy" earlier in this doc. Trigger: deploy v3.0.3a as a clean baseline first. |
 | **What it does** | • Consolidates three separate website CloudFront distributions (main, leaderboard, stream-overlays) into one<br>• Single S3 bucket for all web assets<br>• Leaderboard and overlays built into `website/public/` subdirectories during pipeline |
 | **Key files**    | `lib/cdk-pipeline-stack.ts`, `lib/drem-app-stack.ts`, `lib/base-stack.ts`, `compose.yaml`, `Makefile`, website build scripts                                                                                                                   |
 | **Tag**          | `v3.0.4`                                                                                                                                                                                                                                       |
@@ -117,7 +150,7 @@ merged in any order at any time.
 |---|---|---|---|
 | [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.3a 2026-04-25 (kept branch's `Makefile` `$(require_approval_arg)` injection) |
 | [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.3a 2026-04-25 (kept upstream's extracted `mainSiteDeployStep` + branch's `--legacy-peer-deps`) |
-| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | None (new `pico-display/` directory + admin page) | ⚠ Needs rebase — fork-only `CLAUDE.md` add (skip), more conflicts likely |
+| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | Hard dependency on #168 — pico modifies `website/leaderboard/src/components/raceInfoFooter.tsx` and `website/overlays/src/App.tsx` (post-consolidation paths) | ⏸ Deferred — rebase after recreated #168 lands |
 | [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Already on v3.0.3a |
 | [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Already on v3.0.3a |
 | [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ✅ Already on v3.0.3a |
