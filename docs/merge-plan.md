@@ -1,7 +1,7 @@
 # Upstream Merge Plan — SSM Cross-Stack Migration + Feature PRs
 
 **Generated:** 2026-04-03
-**Updated:** 2026-04-24
+**Updated:** 2026-04-25
 **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
 **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
 
@@ -18,8 +18,29 @@ Additionally, 20+ independent feature/fix PRs (#170–#197) can be merged at any
 they have no dependencies on the SSM migration chain or on each other (a few light ordering
 notes are called out below).
 
-**Status (2026-04-24):** Releases 3.0.1, 3.0.2, and 3.0.3 are merged. Only 3.0.4 (#168)
-remains — ready to rebase on v3.0.3.
+**Status (2026-04-25):** Releases 3.0.1, 3.0.2, 3.0.3, and the 3.0.3a hotfix (PR #198, NAG
+suppression refactor) are all merged upstream. Only 3.0.4 (#168) remains in the SSM chain.
+
+**v3.0.3a-readiness audit:** All 20 fork PRs were audited against `upstream/main` at v3.0.3a.
+Results below; the Status column in the table reflects the outcome.
+
+| Outcome                        | Count | PRs                                                              |
+| ------------------------------ | ----- | ---------------------------------------------------------------- |
+| ✅ Already on v3.0.3a            | 11    | #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186 |
+| ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
+| ⚠️ Needs manual rebase (CLAUDE.md + tsconfig.json) | 2 | #168, #172 |
+| ⚠️ Needs manual rebase (CLAUDE.md + bin/drem.ts)   | 2 | #170, #171 |
+
+**Notable findings from the audit:**
+
+- No PR conflicts with the v3.0.3a NAG-suppression refactor in `lib/drem-app-stack.ts` — git
+  auto-merges those hunks because #198 only moved per-resource suppressions to stack-level,
+  which doesn't overlap with where my PRs add their construct instantiations.
+- The `tsconfig.json` conflicts on #168/#172 trace back to an old commit (`5b060ed Remove
+  terms and conditions from frontend and config`) from PR #164 (Release 3.0.1). Those
+  branches were created before #164 landed, so they replay an outdated tsconfig change.
+- The `bin/drem.ts` conflicts on #170/#171 are real CDK changes (configurable manual approval,
+  Cognito attributes for avatar) that need merging by hand.
 
 > **BREAKING CHANGE — Sequential upgrade required for existing deployments.**
 > Users with an existing deployment must apply PRs 1 → 2 → 3 → 4 **in order**, deploying each
@@ -93,25 +114,25 @@ merged in any order at any time.
 
 | PR | Title | Dependencies | Status |
 |---|---|---|---|
-| [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ⏳ Open |
-| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ⏳ Open |
-| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | None (new `pico-display/` directory + admin page) | ⏳ Open |
-| [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ⏳ Open |
-| [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ⏳ Open |
-| [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ⏳ Open |
-| [#179](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/179) | feat: dark mode and compact density toggle | None (topNav + CSS only) — closes #36 | ⏳ Open |
-| [#180](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/180) | feat(race-admin): CSV export of race data | None (new export utility + button) | ⏳ Open |
-| [#181](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/181) | fix(race-admin): show track name and enable track filter | None (race admin frontend only) — closes #41 | ⏳ Open |
-| [#182](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/182) | fix(overlays): align numbers and show gap to leader | None (stream overlays SVG + JS only) — closes #44, #54 | ⏳ Open |
-| [#183](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/183) | fix(timekeeper): auto timer status display and race page layout | None (timekeeper frontend + laps table config) — closes #60 | ⏳ Open |
-| [#184](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/184) | fix(docker): switch to node:20-alpine — node:22-alpine npm is broken | None (Dockerfiles only) — **should merge before #171** | ⏳ Open |
-| [#185](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/185) | fix: lazy-load user roles on admin users page | None (Lambda + CDK + frontend) | ⏳ Open |
-| [#186](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/186) | feat: lap count based racing format | None (CDK schema + frontend + overlays) | ⏳ Open |
-| [#187](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/187) | feat: DREM data export/import CLI tools | None (new `scripts/` directory + `scripts/drem_data/` package) | ⏳ Open |
-| [#188](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/188) | feat(events): add TEST_EVENT type | None (additive enum value + frontend dropdown + i18n) | ⏳ Open |
-| [#195](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/195) | fix(leaderboard): handle null trackId in getLeaderboard resolver (closes #194) | None (Lambda-only fix) | ⏳ Open |
-| [#196](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/196) | feat(stats): racer and event statistics engine + chart.js migration | None on SSM chain. Overlaps with #188 — contains the TEST_EVENT commits via merge, so whichever lands first makes the other a partial no-op on rebase | ⏳ Open |
-| [#197](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/197) | feat: race results PDFs (organiser summary / podium / racer cert / bulk) | None. Self-contained: new CDK construct, new container-image Lambdas, new frontend hook. Task #48 | ⏳ Open |
+| [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ⚠ Needs rebase — CLAUDE.md + `bin/drem.ts` |
+| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ⚠ Needs rebase — CLAUDE.md + `bin/drem.ts` |
+| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | None (new `pico-display/` directory + admin page) | ⚠ Needs rebase — CLAUDE.md + `tsconfig.json` |
+| [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Already on v3.0.3a |
+| [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Already on v3.0.3a |
+| [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ✅ Already on v3.0.3a |
+| [#179](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/179) | feat: dark mode and compact density toggle | None (topNav + CSS only) — closes #36 | ✅ Already on v3.0.3a |
+| [#180](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/180) | feat(race-admin): CSV export of race data | None (new export utility + button) | ✅ Already on v3.0.3a |
+| [#181](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/181) | fix(race-admin): show track name and enable track filter | None (race admin frontend only) — closes #41 | ✅ Already on v3.0.3a |
+| [#182](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/182) | fix(overlays): align numbers and show gap to leader | None (stream overlays SVG + JS only) — closes #44, #54 | ✅ Already on v3.0.3a |
+| [#183](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/183) | fix(timekeeper): auto timer status display and race page layout | None (timekeeper frontend + laps table config) — closes #60 | ✅ Already on v3.0.3a |
+| [#184](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/184) | fix(docker): switch to node:20-alpine — node:22-alpine npm is broken | None (Dockerfiles only) — **should merge before #171** | ✅ Already on v3.0.3a |
+| [#185](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/185) | fix: lazy-load user roles on admin users page | None (Lambda + CDK + frontend) | ✅ Already on v3.0.3a |
+| [#186](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/186) | feat: lap count based racing format | None (CDK schema + frontend + overlays) | ✅ Already on v3.0.3a |
+| [#187](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/187) | feat: DREM data export/import CLI tools | None (new `scripts/` directory + `scripts/drem_data/` package) | ✅ Rebased on v3.0.3a 2026-04-25 |
+| [#188](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/188) | feat(events): add TEST_EVENT type | None (additive enum value + frontend dropdown + i18n) | ✅ Rebased on v3.0.3a 2026-04-25 |
+| [#195](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/195) | fix(leaderboard): handle null trackId in getLeaderboard resolver (closes #194) | None (Lambda-only fix) | ✅ Rebased on v3.0.3a 2026-04-25 |
+| [#196](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/196) | feat(stats): racer and event statistics engine + chart.js migration | None on SSM chain. Overlaps with #188 — contains the TEST_EVENT commits via merge, so whichever lands first makes the other a partial no-op on rebase | ✅ Rebased on v3.0.3a 2026-04-25 |
+| [#197](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/197) | feat: race results PDFs (organiser summary / podium / racer cert / bulk) | None. Self-contained: new CDK construct, new container-image Lambdas, new frontend hook. Task #48 | ✅ Rebased on v3.0.3a 2026-04-25 |
 
 ### Notes on independent PRs
 
