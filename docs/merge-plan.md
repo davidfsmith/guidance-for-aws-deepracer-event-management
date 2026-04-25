@@ -28,19 +28,20 @@ Results below; the Status column in the table reflects the outcome.
 | ------------------------------ | ----- | ---------------------------------------------------------------- |
 | ✅ Already on v3.0.3a            | 11    | #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186 |
 | ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
-| ⚠️ Needs manual rebase (CLAUDE.md + tsconfig.json) | 2 | #168, #172 |
-| ⚠️ Needs manual rebase (CLAUDE.md + bin/drem.ts)   | 2 | #170, #171 |
+| ✅ Manual conflict resolved      | 2     | #170 (`Makefile` — kept `$(require_approval_arg)` injection), #171 (`lib/cdk-pipeline-stack.ts` — kept upstream's extracted-step refactor + branch's `--legacy-peer-deps`) |
+| ⚠️ Needs manual rebase           | 2     | #168, #172 (both: stale fork-only `CLAUDE.md` adds + likely more conflicts further along their long histories) |
 
 **Notable findings from the audit:**
 
 - No PR conflicts with the v3.0.3a NAG-suppression refactor in `lib/drem-app-stack.ts` — git
   auto-merges those hunks because #198 only moved per-resource suppressions to stack-level,
   which doesn't overlap with where my PRs add their construct instantiations.
-- The `tsconfig.json` conflicts on #168/#172 trace back to an old commit (`5b060ed Remove
-  terms and conditions from frontend and config`) from PR #164 (Release 3.0.1). Those
-  branches were created before #164 landed, so they replay an outdated tsconfig change.
-- The `bin/drem.ts` conflicts on #170/#171 are real CDK changes (configurable manual approval,
-  Cognito attributes for avatar) that need merging by hand.
+- The earlier prediction of `tsconfig.json` conflicts on #168/#172 was wrong — they hit
+  `CLAUDE.md` first. They likely have the tsconfig conflict further along the rebase too,
+  but that surfaces only after skipping the fork-only `CLAUDE.md` adds.
+- The earlier prediction of `bin/drem.ts` conflicts on #170/#171 was also misleading — once
+  resolved, the actual files in conflict were `Makefile` and `lib/cdk-pipeline-stack.ts`
+  respectively.
 
 > **BREAKING CHANGE — Sequential upgrade required for existing deployments.**
 > Users with an existing deployment must apply PRs 1 → 2 → 3 → 4 **in order**, deploying each
@@ -114,9 +115,9 @@ merged in any order at any time.
 
 | PR | Title | Dependencies | Status |
 |---|---|---|---|
-| [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ⚠ Needs rebase — CLAUDE.md + `bin/drem.ts` |
-| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ⚠ Needs rebase — CLAUDE.md + `bin/drem.ts` |
-| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | None (new `pico-display/` directory + admin page) | ⚠ Needs rebase — CLAUDE.md + `tsconfig.json` |
+| [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.3a 2026-04-25 (kept branch's `Makefile` `$(require_approval_arg)` injection) |
+| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.3a 2026-04-25 (kept upstream's extracted `mainSiteDeployStep` + branch's `--legacy-peer-deps`) |
+| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | None (new `pico-display/` directory + admin page) | ⚠ Needs rebase — fork-only `CLAUDE.md` add (skip), more conflicts likely |
 | [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Already on v3.0.3a |
 | [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Already on v3.0.3a |
 | [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ✅ Already on v3.0.3a |
