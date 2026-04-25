@@ -29,7 +29,8 @@ Results below; the Status column in the table reflects the outcome.
 | ✅ Already on v3.0.3a            | 11    | #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186 |
 | ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
 | ✅ Manual conflict resolved      | 2     | #170 (`Makefile` — kept `$(require_approval_arg)` injection), #171 (`lib/cdk-pipeline-stack.ts` — kept upstream's extracted-step refactor + branch's `--legacy-peer-deps`) |
-| ⏸ Deferred — recreate as fresh PR | 2 | #168, #172 (see "Recreation strategy" below) |
+| ✅ Recreated as fresh PR         | 1     | #168 → **#200** (`feat/consolidate-websites-v2`, 6 clean commits on top of v3.0.3a; old #168 closed as superseded) |
+| ⏸ Deferred — rebase after #200  | 1     | #172 (depends on consolidation; rebase after #200 lands) |
 
 **Notable findings from the audit:**
 
@@ -45,9 +46,12 @@ Results below; the Status column in the table reflects the outcome.
 
 ### Recreation strategy for #168 + #172
 
-After rebase audit, #168 (consolidate-websites) was attempted via cherry-pick onto v3.0.3a
-and produced **5 conflict files in a single commit** (`46c91aa Consolidate leaderboard and
-overlays into main website`):
+#168 was successfully recreated as **#200** (`feat/consolidate-websites-v2`) on 2026-04-25.
+Process documented below for future reference.
+
+After the initial rebase audit, #168 (consolidate-websites) was attempted via cherry-pick
+onto v3.0.3a and produced **5 conflict files in a single commit** (`46c91aa Consolidate
+leaderboard and overlays into main website`):
 
 | File | Conflict blocks | Notes |
 |---|---|---|
@@ -65,16 +69,33 @@ conflict resolution risks producing a synth-clean but feature-broken state.
 `website/leaderboard/src/components/raceInfoFooter.tsx` and `website/overlays/src/App.tsx`,
 which only exist after consolidation.
 
-**Plan:**
+**Plan executed:**
 
-1. **Deploy v3.0.3a as a fresh DREM environment** — clean baseline to test #168 against,
-   without prior fork state interfering with CFN drift / SSM params.
-2. **Recreate #168 from scratch** — new branch off `upstream/main` (= v3.0.3a). Apply the
-   consolidation feature manually (file-by-file from the existing #168) with the v3.0.3a
-   stack-level NAG suppressions, single mainSiteDeployStep, and current CDN/website
-   constructs in mind. Open as a new PR; close the old #168 as superseded.
-3. **Once recreated #168 is merged**, rebase #172 on top — most pico commits are
-   self-contained in `pico-display/` + new admin-page components and should replay clean.
+1. ✅ **Deployed v3.0.3a as a fresh DREM environment** (2026-04-25) — clean baseline.
+   Smoke-tested: login, event, fleet, racer, race — all green.
+2. ✅ **Recreated #168 → #200** — fresh branch `feat/consolidate-websites-v2` off
+   `upstream/main` (v3.0.3a), cherry-picked the 9 feature commits in order. 3 were
+   empty / no-ops (already in v3.0.3a). 6 commits applied with conflict resolution
+   on `46c91aa`, `8fb9559`, `674e38e`. Final branch is 6 clean commits ahead of
+   v3.0.3a; CDK synth passes; CDK assertion tests pass (5/5). Old #168 closed as
+   superseded.
+3. ⏳ **Pending — rebase #172 on top of #200** once #200 is merged. Most pico commits
+   are self-contained in `pico-display/` + new admin-page components and should
+   replay cleanly. Cross-PR contamination (the 7 #168 commits previously inlined in
+   #172's history) will resolve naturally once #200 is in upstream.
+
+**Key conflict resolutions in the v2 recreation** (for future reference):
+
+| Commit | File | Resolution |
+|---|---|---|
+| `46c91aa` | `Makefile` | Took branch's new `local.build.*` targets |
+| `46c91aa` | `jest.config.js` | Kept HEAD (plain JS) — branch's compiled-output was an artifact of the unrelated `7dce3a1` jest-to-TS commit which we didn't pick |
+| `46c91aa` | `lib/cdk-pipeline-stack.ts` | Removed leaderboard/overlay outputs but kept `dremWebsiteUrl` and `appsyncId` (added to upstream after the branch fork) |
+| `46c91aa` | `lib/drem-app-stack.ts` | Same pattern — removed leaderboard/overlay outputs + cwRumLeaderboardAppMonitor outputs, kept the upstream-added `dremWebsiteUrl`/`appsyncId` and the `this.appsyncId =` assignment |
+| `46c91aa` | `website/leaderboard/vitest.config.ts` | File-location move from `website-leaderboard/` to `website/leaderboard/` — accepted both deletion of old and addition of new |
+| `8fb9559` | `lib/cdk-pipeline-stack.ts` | Branch consolidates 3 deploy steps to 1 `WebsiteDeployToS3`; kept it as a `const websiteDeployStep` so v3.0.3a's `postDeployStep.addStepDependency()` keeps working |
+| `674e38e` | `lib/cdk-pipeline-stack.ts` | Branch wanted `npm install --ignore-scripts` (drops tests); kept HEAD's tests, just fixed the stale `website-leaderboard` path to `website/leaderboard` |
+| `e5d8b8e` | `jest.config.js` | Skipped (would have deleted the file; we kept the JS version since we didn't take the unrelated TS conversion) |
 
 > **BREAKING CHANGE — Sequential upgrade required for existing deployments.**
 > Users with an existing deployment must apply PRs 1 → 2 → 3 → 4 **in order**, deploying each
@@ -131,10 +152,10 @@ proceeding to PR 3.
 
 | Item             | Detail                                                                                                                                                                                                                                         |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PR**           | [#168](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/168)                                                                                                                                  |
-| **Title**        | Consolidate leaderboard and overlays into single CloudFront distribution (PR 4 of 4)                                                                                                                                                           |
-| **Dependencies** | Releases 3.0.1, 3.0.2, and 3.0.3 must be deployed first                                                                                                                                                                                       |
-| **Status**       | ⏸ Deferred — existing branch will be closed and the feature recreated as a fresh PR off `upstream/main` (v3.0.3a). See "Recreation strategy" earlier in this doc. Trigger: deploy v3.0.3a as a clean baseline first. |
+| **PR**           | [#200](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/200) (replaces closed-as-superseded [#168](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/168)) |
+| **Title**        | Consolidate leaderboard and overlays into single CloudFront distribution (PR 4 of 4) [v2]                                                                                                                                                                  |
+| **Dependencies** | Releases 3.0.1, 3.0.2, and 3.0.3a must be deployed first                                                                                                                                                                                                  |
+| **Status**       | ⏳ Open — recreated 2026-04-25 (`feat/consolidate-websites-v2`). 6 clean commits on top of v3.0.3a. CDK synth + tests pass. Awaiting reviewer / pipeline deploy validation.                                                                                |
 | **What it does** | • Consolidates three separate website CloudFront distributions (main, leaderboard, stream-overlays) into one<br>• Single S3 bucket for all web assets<br>• Leaderboard and overlays built into `website/public/` subdirectories during pipeline |
 | **Key files**    | `lib/cdk-pipeline-stack.ts`, `lib/drem-app-stack.ts`, `lib/base-stack.ts`, `compose.yaml`, `Makefile`, website build scripts                                                                                                                   |
 | **Tag**          | `v3.0.4`                                                                                                                                                                                                                                       |
@@ -150,7 +171,7 @@ merged in any order at any time.
 |---|---|---|---|
 | [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.3a 2026-04-25 (kept branch's `Makefile` `$(require_approval_arg)` injection) |
 | [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.3a 2026-04-25 (kept upstream's extracted `mainSiteDeployStep` + branch's `--legacy-peer-deps`) |
-| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | Hard dependency on #168 — pico modifies `website/leaderboard/src/components/raceInfoFooter.tsx` and `website/overlays/src/App.tsx` (post-consolidation paths) | ⏸ Deferred — rebase after recreated #168 lands |
+| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | Hard dependency on #200 — pico modifies `website/leaderboard/src/components/raceInfoFooter.tsx` and `website/overlays/src/App.tsx` (post-consolidation paths) | ⏸ Deferred — rebase after #200 lands |
 | [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Already on v3.0.3a |
 | [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Already on v3.0.3a |
 | [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ✅ Already on v3.0.3a |
