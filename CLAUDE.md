@@ -107,7 +107,7 @@ Requires the project venv (`make local.config.python` or `make venv`). Run from 
 ### Fork Structure
 - **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
 - **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
-- Current main is at **v3.0.2** (PRs #164, #165, #167 merged)
+- Current main is at **v3.0.3** (PRs #164, #165, #166, #167, #190 merged)
 
 ### Upstream SSM Migration Chain (sequential, deploy-between-each)
 PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Terms & Conditions, and consolidate websites into a single CloudFront distribution. **Existing deployments must apply in order.**
@@ -116,8 +116,8 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 |---------|-----|--------|
 | 3.0.1 | #167 (test infra) + #164 (SSM params + remove T&C frontend) | ✅ Merged |
 | 3.0.2 | #165 (switch infra to SSM, remove T&C CDK) | ✅ Merged 2026-04-17 |
-| 3.0.3 | #166 (restore base-first pipeline ordering) | ⏳ Open, ready for rebase |
-| 3.0.4 | #168 (consolidate into single CloudFront) | ⏳ Open, needs rebase after #166 |
+| 3.0.3 | #166 (restore base-first pipeline ordering) + #190 (fix nag findings) | ✅ Merged 2026-04-24 |
+| 3.0.4 | #168 (consolidate into single CloudFront) | ⏳ Open, needs rebase on v3.0.3 (tsconfig.json conflict) |
 
 ### Independent Feature/Fix PRs (no dependencies on SSM chain)
 | PR | Title | Notes |
@@ -136,6 +136,11 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 | #184 | fix(docker): node:20-alpine | **Merge before #171** |
 | #185 | fix: lazy-load user roles | Lambda + CDK + frontend |
 | #186 | feat: lap count racing | CDK schema + frontend + overlays |
+| #187 | feat: DREM data export/import CLI tools | New `scripts/drem_*.py` |
+| #188 | feat(events): add TEST_EVENT type | CDK enum + stats filter |
+| #195 | fix(leaderboard): handle null trackId in getLeaderboard resolver | Upstream issue #194 |
+| #196 | feat(stats): racer + event statistics engine + chart.js migration | New `lib/constructs/statistics.ts` + /stats route |
+| #197 | feat: race results PDFs (organiser / podium / cert / bulk) | Async job pattern, container image Lambda |
 
 ### Merge order notes
 - **#184** (Docker node:20) must merge **before** #171 (avatar)
@@ -144,11 +149,11 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 
 ## Current Work — Task Backlog
 
-### Pending tasks (21)
+### Pending tasks (22)
 
 | # | Task | Status | Upstream PR |
 |---|------|--------|-------------|
-| 1 | AWS Greengrass integration | Spec done, blocked on SSM PRs | |
+| 1 | AWS Greengrass integration | Spec done, unblocked — SSM chain landed | |
 | 2 | Racer and event statistics | Phase 1 deployed + tested with 474 events | |
 | 3 | Real-time car performance data | Depends on #1 | |
 | 4 | Comprehensive test coverage | | #167 (test infra merged) |
@@ -168,10 +173,12 @@ PRs #164–#168 eliminate `Fn::ImportValue` cross-stack dependencies, remove Ter
 | 45 | Consistent debug handler | | |
 | 46 | Fix NULL trackId bug in getLeaderboard Lambda | Fix on `fix/leaderboard-null-trackid` | #195 (issue #194) |
 | 47 | Add TEST_EVENT type + exclude from stats | Deployed; 29 events marked as TEST_EVENT | #188 |
-| 48 | Nice formatted PDF of race results with DeepRacer logo | | |
+| 48 | Nice formatted PDF of race results with DeepRacer logo | Deployed; async job pattern | #197 |
 | 49 | Device management and deletion (ownership, soft delete, auto-cleanup) | Needs design spec — upstream issue #105 | |
 | 50 | Optimise CDK pipeline build/deploy speed | Deferred until v3.0.4 (website consolidation) | |
 | 51 | Migrate DREM charts to chart.js (keep CloudScape palette) | Unblocks dual-axis, crosshair sync, custom ticks | |
+| 52 | White-labelling: company logo + colour scheme | Admin page for branding. Used across PDFs/overlays/leaderboards. Pick up after #48 ships | |
+| 53 | CFN resource-count reduction / stack split | Currently at 500 (hard cap). v3.0.4 lands us around 470–475. Top consumers: graphQlApi (148), ModelsManager (71), CarLogsManager (65). Needs spec | |
 
 ### Key dependency chains
 - **#1 (Greengrass)** blocks #3, #9, #41
@@ -186,7 +193,7 @@ Specs live on the `docs/design-specs` branch.
 
 ### Follow-ups
 - **When PR #171 (avatar) merges:** update export/import tools (#35 / PR #187) to handle avatar config + highlight colour fields in Cognito user attributes and leaderboard entries
-- **When SSM migration lands (v3.0.4):** investigate pipeline build optimisation
+- **When v3.0.4 lands (website consolidation):** investigate pipeline build optimisation (#50); re-measure CFN resource count for #53
 - **Stats `/stats` route** is currently behind the Cognito Authenticator — needs public (unauthenticated) access for Phase 2
 
 ### Statistics Engine — Phase 1 (Task #2)
