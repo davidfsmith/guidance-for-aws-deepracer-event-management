@@ -29,7 +29,7 @@ Results below; the Status column in the table reflects the outcome.
 | ✅ Already on v3.0.3a            | 11    | #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186 |
 | ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
 | ✅ Manual conflict resolved      | 2     | #170 (`Makefile` — kept `$(require_approval_arg)` injection), #171 (`lib/cdk-pipeline-stack.ts` — kept upstream's extracted-step refactor + branch's `--legacy-peer-deps`) |
-| ✅ Recreated as fresh PR         | 1     | #168 → **#200** (`feat/consolidate-websites-v2`, 6 clean commits on top of v3.0.3a; old #168 closed as superseded) |
+| ✅ Recreated as fresh PR         | 1     | #168 → **#200** (`feat/consolidate-websites-v2`, 6 clean commits + 2 follow-up fixes on top of v3.0.3a; old #168 closed as superseded; upgrade-validated v3.0.3a → consolidated 2026-04-26) |
 | ⏸ Deferred — rebase after #200  | 1     | #172 (depends on consolidation; rebase after #200 lands) |
 
 **Notable findings from the audit:**
@@ -155,7 +155,7 @@ proceeding to PR 3.
 | **PR**           | [#200](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/200) (replaces closed-as-superseded [#168](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/168)) |
 | **Title**        | Consolidate leaderboard and overlays into single CloudFront distribution (PR 4 of 4) [v2]                                                                                                                                                                  |
 | **Dependencies** | Releases 3.0.1, 3.0.2, and 3.0.3a must be deployed first                                                                                                                                                                                                  |
-| **Status**       | ⏳ Open — recreated 2026-04-25 (`feat/consolidate-websites-v2`). 6 clean commits on top of v3.0.3a. CDK synth + tests pass. Awaiting reviewer / pipeline deploy validation.                                                                                |
+| **Status**       | ⏳ Open — recreated 2026-04-25 (`feat/consolidate-websites-v2`), upgrade-validated 2026-04-26 (clean v3.0.3a → consolidated upgrade through the live pipeline; both leaderboard + streamingOverlay CloudFront distributions removed cleanly). Awaiting reviewer. |
 | **What it does** | • Consolidates three separate website CloudFront distributions (main, leaderboard, stream-overlays) into one<br>• Single S3 bucket for all web assets<br>• Leaderboard and overlays built into `website/public/` subdirectories during pipeline |
 | **Key files**    | `lib/cdk-pipeline-stack.ts`, `lib/drem-app-stack.ts`, `lib/base-stack.ts`, `compose.yaml`, `Makefile`, website build scripts                                                                                                                   |
 | **Tag**          | `v3.0.4`                                                                                                                                                                                                                                       |
