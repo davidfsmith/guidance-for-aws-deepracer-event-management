@@ -29,8 +29,7 @@ Results below; the Status column in the table reflects the outcome.
 | ✅ Already on v3.0.3a            | 11    | #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186 |
 | ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
 | ✅ Manual conflict resolved      | 2     | #170 (`Makefile` — kept `$(require_approval_arg)` injection), #171 (`lib/cdk-pipeline-stack.ts` — kept upstream's extracted-step refactor + branch's `--legacy-peer-deps`) |
-| ✅ Recreated as fresh PR         | 1     | #168 → **#200** (`feat/consolidate-websites-v2`, 6 clean commits + 2 follow-up fixes on top of v3.0.3a; old #168 closed as superseded; upgrade-validated v3.0.3a → consolidated 2026-04-26) |
-| ⏸ Deferred — rebase after #200  | 1     | #172 (depends on consolidation; rebase after #200 lands) |
+| ✅ Recreated as fresh PR         | 2     | #168 → **#200** (`feat/consolidate-websites-v2`, 6 clean commits + 2 follow-up fixes on top of v3.0.3a; old #168 closed as superseded; upgrade-validated v3.0.3a → consolidated 2026-04-26)<br>#172 → **#201** (`feat/pico-display-v2`, 53 clean commits on top of #200; old #172 closed as superseded; depends on #200) |
 
 **Notable findings from the audit:**
 
@@ -171,7 +170,7 @@ merged in any order at any time.
 |---|---|---|---|
 | [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.3a 2026-04-25 (kept branch's `Makefile` `$(require_approval_arg)` injection) |
 | [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.3a 2026-04-25 (kept upstream's extracted `mainSiteDeployStep` + branch's `--legacy-peer-deps`) |
-| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) | feat: Pico W Galactic Unicorn race display with OTA updates | Hard dependency on #200 — pico modifies `website/leaderboard/src/components/raceInfoFooter.tsx` and `website/overlays/src/App.tsx` (post-consolidation paths) | ⏸ Deferred — rebase after #200 lands |
+| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) → [#201](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/201) | feat: Pico W Galactic Unicorn race display with OTA updates [v2] | Hard dependency on #200 (post-consolidation paths) | ✅ Recreated 2026-04-26 — `feat/pico-display-v2` based on #200 with 53 clean commits; old #172 closed as superseded |
 | [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Already on v3.0.3a |
 | [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Already on v3.0.3a |
 | [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ✅ Already on v3.0.3a |
