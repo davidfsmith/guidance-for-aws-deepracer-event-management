@@ -1,7 +1,7 @@
 # Upstream Merge Plan — SSM Cross-Stack Migration + Feature PRs
 
 **Generated:** 2026-04-03
-**Updated:** 2026-04-25
+**Updated:** 2026-05-01
 **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
 **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
 
@@ -9,17 +9,19 @@
 
 ## Overview
 
-Four upstream PRs (#164–#166, #168) form a sequential migration that eliminates `Fn::ImportValue`
-cross-stack dependencies, removes the Terms & Conditions feature, and consolidates websites
-into a single CloudFront distribution. A fifth PR (#167) adds test infrastructure and is
-independent of the migration series.
+Four upstream PRs (#164–#166, #168→#200) formed a sequential migration that eliminated
+`Fn::ImportValue` cross-stack dependencies, removed the Terms & Conditions feature, and
+consolidated websites into a single CloudFront distribution. A fifth PR (#167) added test
+infrastructure and was independent of the migration series.
 
 Additionally, 20+ independent feature/fix PRs (#170–#197) can be merged at any time —
 they have no dependencies on the SSM migration chain or on each other (a few light ordering
 notes are called out below).
 
-**Status (2026-04-25):** Releases 3.0.1, 3.0.2, 3.0.3, and the 3.0.3a hotfix (PR #198, NAG
-suppression refactor) are all merged upstream. Only 3.0.4 (#168) remains in the SSM chain.
+**Status (2026-05-01):** **The full SSM migration chain is merged.** v3.0.1, v3.0.2, v3.0.3,
+v3.0.3a, and v3.0.4 are all upstream. v3.0.4 shipped 2026-04-30 (PR #200, commit `5e94d3d`)
+with two backward-compat shims that let v3.0.3a → v3.0.4 self-mutate cleanly via the
+GitHub-poll upgrade path. Pico-display PR #201 has been rebased onto v3.0.4.
 
 **v3.0.3a-readiness audit:** All 20 fork PRs were audited against `upstream/main` at v3.0.3a.
 Results below; the Status column in the table reflects the outcome.
@@ -29,7 +31,7 @@ Results below; the Status column in the table reflects the outcome.
 | ✅ Already on v3.0.3a            | 11    | #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186 |
 | ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
 | ✅ Manual conflict resolved      | 2     | #170 (`Makefile` — kept `$(require_approval_arg)` injection), #171 (`lib/cdk-pipeline-stack.ts` — kept upstream's extracted-step refactor + branch's `--legacy-peer-deps`) |
-| ✅ Recreated as fresh PR         | 2     | #168 → **#200** (`feat/consolidate-websites-v2`, 6 clean commits + 2 follow-up fixes on top of v3.0.3a; old #168 closed as superseded; upgrade-validated v3.0.3a → consolidated 2026-04-26)<br>#172 → **#201** (`feat/pico-display-v2`, 53 clean commits on top of #200; old #172 closed as superseded; depends on #200) |
+| ✅ Recreated as fresh PR         | 2     | #168 → **#200** ✅ Merged in v3.0.4 (2026-04-30, commit `5e94d3d`). Originally 6 commits + 2 follow-up fixes on top of v3.0.3a; required two backward-compat shims (`dd58bb6`) after a customer hit the path-B upgrade failure (see §Pipeline self-mutation lessons below).<br>#172 → **#201** (`feat/pico-display-v2`, 61 clean commits on top of v3.0.4 after rebase 2026-05-01; old #172 closed as superseded) |
 
 **Notable findings from the audit:**
 
@@ -154,10 +156,56 @@ proceeding to PR 3.
 | **PR**           | [#200](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/200) (replaces closed-as-superseded [#168](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/168)) |
 | **Title**        | Consolidate leaderboard and overlays into single CloudFront distribution (PR 4 of 4) [v2]                                                                                                                                                                  |
 | **Dependencies** | Releases 3.0.1, 3.0.2, and 3.0.3a must be deployed first                                                                                                                                                                                                  |
-| **Status**       | ⏳ Open — recreated 2026-04-25 (`feat/consolidate-websites-v2`), upgrade-validated 2026-04-26 (clean v3.0.3a → consolidated upgrade through the live pipeline; both leaderboard + streamingOverlay CloudFront distributions removed cleanly). Awaiting reviewer. |
-| **What it does** | • Consolidates three separate website CloudFront distributions (main, leaderboard, stream-overlays) into one<br>• Single S3 bucket for all web assets<br>• Leaderboard and overlays built into `website/public/` subdirectories during pipeline |
-| **Key files**    | `lib/cdk-pipeline-stack.ts`, `lib/drem-app-stack.ts`, `lib/base-stack.ts`, `compose.yaml`, `Makefile`, website build scripts                                                                                                                   |
+| **Status**       | ✅ Merged — 2026-04-30 (squash-merge `5e94d3d`). Path-A (local `cdk deploy`) validated 2026-04-26. Path-B (PR-merge + GitHub poll) failed initially because the v3.0.3a buildspec is baked into CodeBuild and ran against the new source — fixed via two backward-compat shims in `dd58bb6` (root postinstall + `website-leaderboard/package.json` stub). See **Pipeline self-mutation lessons** below. |
+| **What it does** | • Consolidates three separate website CloudFront distributions (main, leaderboard, stream-overlays) into one<br>• Single S3 bucket for all web assets<br>• Leaderboard and overlays built into `website/public/` subdirectories during pipeline<br>• `WebsiteTests` separated from synth so directory restructures can't block self-mutation<br>• Backward-compat shims so v3.0.3a → v3.0.4 self-mutates cleanly via either upgrade path |
+| **Key files**    | `lib/cdk-pipeline-stack.ts`, `lib/drem-app-stack.ts`, `lib/base-stack.ts`, `compose.yaml`, `Makefile`, website build scripts, `package.json` (postinstall), `website-leaderboard/package.json` (shim)                                                                                                                  |
 | **Tag**          | `v3.0.4`                                                                                                                                                                                                                                       |
+
+---
+
+## Pipeline self-mutation lessons (from v3.0.4 rollout)
+
+The v3.0.4 release exposed a class of pipeline-stack bug worth documenting for future PRs that
+touch the synth buildspec or the build directory layout.
+
+**There are two upgrade paths a customer might follow.** Both must work for a release to be
+safely shipped.
+
+| Path | What the customer does | What happens |
+|---|---|---|
+| **Path A** | Runs `make pipeline.deploy` from local | `cdk deploy` of the pipeline stack with the new template. CFN UPDATE applies the new CodeBuild buildspec immediately. Next pipeline run uses the new buildspec. |
+| **Path B** | Merges the PR (or pulls the next release) and waits | Existing CodeBuild project still has the **old** buildspec. The poll-triggered run executes those old commands against the new source code. If the old commands fail on the new source, `cdk synth` never runs, `cdk.out` is never produced, and the pipeline cannot self-mutate. Stuck. |
+
+Path B is the realistic customer experience — most users don't pull and run `cdk deploy`
+manually. Path A is what the maintainer uses during testing, and it bypasses the whole
+class of failure. **Local validation alone is not enough** — also walk through every command
+in the previous release's buildspec mentally against the new source tree, or actually exercise
+path B on a test account.
+
+**Concrete failure on PR #200:**
+
+- New source: postinstall gated by `$CODEBUILD_BUILD_ID` (skips on CodeBuild), `website-leaderboard/`
+  directory renamed to `website/leaderboard/`.
+- Old (v3.0.3a) buildspec: `npm install && npm test && cd website && npm test && cd .. &&
+  cd website-leaderboard && npm test && cdk synth`.
+- Path B execution: `npm install` skips website deps → `cd website && npm test` fails ("vitest:
+  command not found"). Even if that worked, `cd website-leaderboard` would fail (directory
+  missing). `cdk.out` never produced. Pipeline stuck.
+
+**Fix pattern: backward-compatibility shims** in the new source so the old buildspec still
+passes. They get ignored after self-mutation but they get the customer through path B.
+
+For #200 specifically:
+1. Drop `$CODEBUILD_BUILD_ID` skip from root postinstall + `|| true` per subdir.
+2. Add `website-leaderboard/package.json` stub with a no-op test script.
+
+**Cleanup task #55** in the backlog tracks removal of these shims in a future release once we're
+confident no v3.0.3a deployments remain.
+
+**For future PRs that change the synth buildspec or directory layout**, ask: *if a customer's
+CodeBuild still has the previous release's buildspec, can each command in that previous
+buildspec succeed against my new source?* If not, add a shim or the customer's pipeline gets
+stuck.
 
 ---
 
@@ -170,7 +218,7 @@ merged in any order at any time.
 |---|---|---|---|
 | [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.3a 2026-04-25 (kept branch's `Makefile` `$(require_approval_arg)` injection) |
 | [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.3a 2026-04-25 (kept upstream's extracted `mainSiteDeployStep` + branch's `--legacy-peer-deps`) |
-| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) → [#201](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/201) | feat: Pico W Galactic Unicorn race display with OTA updates [v2] | Hard dependency on #200 (post-consolidation paths) | ✅ Recreated 2026-04-26 — `feat/pico-display-v2` based on #200 with 53 clean commits; old #172 closed as superseded |
+| [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) → [#201](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/201) | feat: Pico W Galactic Unicorn race display with OTA updates [v2] | Was hard-dep on #200 — now landed in v3.0.4 | ✅ Rebased onto v3.0.4 (2026-05-01) — 61 clean commits on `5e94d3d`; the two pipeline-fix commits (`bbd731b`, `dd58bb6`) auto-dropped during rebase as `patch contents already upstream` |
 | [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Already on v3.0.3a |
 | [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Already on v3.0.3a |
 | [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ✅ Already on v3.0.3a |
@@ -324,6 +372,10 @@ git tag v3.0.X && git push origin v3.0.X
 - Release 3.0.1 (PRs #167 + #164) is merged and deployed as `v3.0.1`.
 - Release 3.0.2 (PR #165) is merged and deployed as `v3.0.2`.
 - Release 3.0.3 (PRs #166 + #190) is merged and released as `v3.0.3` on 2026-04-24.
+- Release 3.0.3a (PR #198, NAG suppression refactor hotfix) shipped on top of `v3.0.3`.
+- Release 3.0.4 (PR #200) is merged and released as `v3.0.4` on 2026-04-30 (commit `5e94d3d`).
+  Includes both the website consolidation and two backward-compat shims for the v3.0.3a → v3.0.4
+  upgrade path. **The full SSM migration chain is now upstream.**
 - Each SSM migration PR **must be deployed to the AWS account** before the next one is merged.
   This is a CloudFormation sequencing requirement, not just a code dependency.
 - Fresh installations (no existing deployment) can safely apply all SSM PRs at once — the
@@ -341,10 +393,16 @@ git tag v3.0.X && git push origin v3.0.X
 - **Post-merge follow-up for chart.js migration**: the stats dashboard is the pilot. Future chart
   additions (per-racer profile, live telemetry overlays, commentator panels) should follow the
   same pattern using the shared wrappers in `website/src/components/charts/`.
-- **Post-merge follow-up for #197 (PDFs)**: once v3.0.4 lands (website consolidation removes ~25
-  resources), re-measure the stack's CFN resource count and file the reduction plan for #53.
-  Also worth considering white-labelling (#52) — the PDFs ship with hard-coded DeepRacer branding
-  (logo + `#232F3E`/`#FF9900` palette) that admin users may want to override per event.
+- **Post-merge follow-up for #197 (PDFs)**: now actionable — v3.0.4 is upstream, so the website
+  consolidation has removed ~25 resources from the stack. Re-measure the stack's CFN resource count
+  and file the reduction plan for #53. Also worth considering white-labelling (#52) — the PDFs
+  ship with hard-coded DeepRacer branding (logo + `#232F3E`/`#FF9900` palette) that admin users
+  may want to override per event.
+- **Post-merge follow-up for #200 (consolidation)**: backward-compat shims need removing in a
+  future release once we're confident no v3.0.3a deployments remain — see backlog task #55.
+  Earliest target is roughly v3.0.6.
+- **Post-v3.0.4 unblocks pipeline optimisation (task #50)**: the build structure is now stable,
+  so optimisation work can start. See `project_pipeline_optimisation.md` for area list.
 - **#183 and #186 both touch racePage*.tsx** — if both merge, the second will need a trivial rebase.
   They modify different sections (layout vs lap count logic) so conflicts are minor.
 - If merging independent PRs to the fork's main for local development, merge them all at once
