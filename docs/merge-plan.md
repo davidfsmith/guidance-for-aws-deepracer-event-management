@@ -1,7 +1,7 @@
 # Upstream Merge Plan — SSM Cross-Stack Migration + Feature PRs
 
 **Generated:** 2026-04-03
-**Updated:** 2026-05-01
+**Updated:** 2026-05-02
 **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
 **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
 
@@ -220,31 +220,33 @@ merged in any order at any time.
 
 | PR | Title | Dependencies | Status |
 |---|---|---|---|
-| [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.3a 2026-04-25 (kept branch's `Makefile` `$(require_approval_arg)` injection) |
-| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.3a 2026-04-25 (kept upstream's extracted `mainSiteDeployStep` + branch's `--legacy-peer-deps`) |
+| [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.4 2026-05-02 (`7a3ea2f`) — clean 3-way merge, sat alongside new `WebsiteTests` step |
+| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.4 2026-05-02 (`a461043`) — real conflicts: dropped 2 deleted Dockerfiles, applied `--legacy-peer-deps` to consolidated docker runs in pipeline-stack, kept v3.0.4 same-origin URLs in `trackTable.tsx`, merged `avataaars` dep into `website/leaderboard/package.json` (kept the shim file at `website-leaderboard/package.json`) |
 | [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) → [#201](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/201) | feat: Pico W Galactic Unicorn race display with OTA updates [v2] | Was hard-dep on #200 — now landed in v3.0.4 | ✅ Rebased onto v3.0.4 (2026-05-01) — 61 clean commits on `5e94d3d`; the two pipeline-fix commits (`bbd731b`, `dd58bb6`) auto-dropped during rebase as `patch contents already upstream` |
-| [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Already on v3.0.3a |
+| [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Rebased on v3.0.4 2026-05-02 (`76f6f7c`) — git auto-followed rename to `website/leaderboard/` |
 | [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Already on v3.0.3a |
 | [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | None (single component swap) — closes #38 | ✅ Already on v3.0.3a |
 | [#179](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/179) | feat: dark mode and compact density toggle | None (topNav + CSS only) — closes #36 | ✅ Already on v3.0.3a |
 | [#180](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/180) | feat(race-admin): CSV export of race data | None (new export utility + button) | ✅ Already on v3.0.3a |
 | [#181](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/181) | fix(race-admin): show track name and enable track filter | None (race admin frontend only) — closes #41 | ✅ Already on v3.0.3a |
-| [#182](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/182) | fix(overlays): align numbers and show gap to leader | None (stream overlays SVG + JS only) — closes #44, #54 | ✅ Already on v3.0.3a |
+| [#182](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/182) | fix(overlays): align numbers and show gap to leader | None (stream overlays SVG + JS only) — closes #44, #54 | ✅ Rebased on v3.0.4 2026-05-02 (`63fdcb9`) — git auto-followed rename to `website/overlays/` |
 | [#183](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/183) | fix(timekeeper): auto timer status display and race page layout | None (timekeeper frontend + laps table config) — closes #60 | ✅ Already on v3.0.3a |
-| [#184](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/184) | fix(docker): switch to node:20-alpine — node:22-alpine npm is broken | None (Dockerfiles only) — **should merge before #171** | ✅ Already on v3.0.3a |
+| [#184](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/184) | fix(docker): switch to node:20-alpine — node:22-alpine npm is broken | None (single Dockerfile after v3.0.4 consolidation) — **should merge before #171** | ✅ Rebased on v3.0.4 2026-05-02 (`dfb74b9`) — dropped changes to the two deleted Dockerfiles (`website-leaderboard/`, `website-stream-overlays/`); only `website/Dockerfile` remains. PR title still says "all three" but the change now applies to the single remaining Dockerfile |
 | [#185](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/185) | fix: lazy-load user roles on admin users page | None (Lambda + CDK + frontend) | ✅ Already on v3.0.3a |
 | [#186](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/186) | feat: lap count based racing format | None (CDK schema + frontend + overlays) | ✅ Already on v3.0.3a |
 | [#187](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/187) | feat: DREM data export/import CLI tools | None (new `scripts/` directory + `scripts/drem_data/` package) | ✅ Rebased on v3.0.3a 2026-04-25 |
 | [#188](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/188) | feat(events): add TEST_EVENT type | None (additive enum value + frontend dropdown + i18n) | ✅ Rebased on v3.0.3a 2026-04-25 |
 | [#195](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/195) | fix(leaderboard): handle null trackId in getLeaderboard resolver (closes #194) | None (Lambda-only fix) | ✅ Rebased on v3.0.3a 2026-04-25 |
-| [#196](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/196) | feat(stats): racer and event statistics engine + chart.js migration | None on SSM chain. Overlaps with #188 — contains the TEST_EVENT commits via merge, so whichever lands first makes the other a partial no-op on rebase | ✅ Rebased on v3.0.3a 2026-04-25 |
+| [#196](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/196) | feat(stats): racer and event statistics engine + chart.js migration | None on SSM chain. Overlaps with #188 — contains the TEST_EVENT commits via merge, so whichever lands first makes the other a partial no-op on rebase | ✅ Rebased on v3.0.4 2026-05-02 (`6a9aaeb`) — single conflict on `lib/drem-app-stack.ts`: dropped the (now-removed) `StreamingOverlay` import, kept the new `Statistics` import |
 | [#197](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/197) | feat: race results PDFs (organiser summary / podium / racer cert / bulk) | None. Self-contained: new CDK construct, new container-image Lambdas, new frontend hook. Task #48 | ✅ Rebased on v3.0.3a 2026-04-25 |
 
 ### Notes on independent PRs
 
-- **#184 (Docker node:20)** should merge **before** #171 (avatar). #184 fixes all three Dockerfiles to use
-  `node:20-alpine` and removes the broken `npm update -g`. #171 then adds `--legacy-peer-deps` to the website
-  Dockerfile only (for the avataaars React 17 peer dep). No duplication between them.
+- **#184 (Docker node:20)** should merge **before** #171 (avatar). After v3.0.4 the consolidation removed
+  the leaderboard and stream-overlays Dockerfiles, so #184 now only fixes `website/Dockerfile`. #171 then
+  adds `--legacy-peer-deps` to that same `website/Dockerfile` (for the avataaars React 17 peer dep). No
+  duplication between them but order still matters because the avatar branch's `npm install` line is on
+  top of the node:20 base image change.
 - **#171 (avatar)** touches `lib/constructs/idp.ts` (adds Cognito attributes), `lib/constructs/user-manager.ts`,
   `lib/constructs/leaderboard.ts`, `lib/constructs/race-manager.ts`, and multiple Lambdas. It's the largest
   independent PR but has no CDK cross-stack changes that conflict with the SSM migration. Depends on #184 for
