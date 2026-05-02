@@ -80,10 +80,14 @@ which only exist after consolidation.
    on `46c91aa`, `8fb9559`, `674e38e`. Final branch is 6 clean commits ahead of
    v3.0.3a; CDK synth passes; CDK assertion tests pass (5/5). Old #168 closed as
    superseded.
-3. ⏳ **Pending — rebase #172 on top of #200** once #200 is merged. Most pico commits
-   are self-contained in `pico-display/` + new admin-page components and should
-   replay cleanly. Cross-PR contamination (the 7 #168 commits previously inlined in
-   #172's history) will resolve naturally once #200 is in upstream.
+3. ✅ **Done — rebased #172 (now #201) onto v3.0.4** on 2026-05-01, the day after #200
+   shipped as `5e94d3d`. Used `git rebase --onto main d139764 feat/pico-display-v2 --empty=drop`
+   to skip past the consolidate commits and replay only the pico work. 61 clean commits
+   on `5e94d3d`. The two pipeline-fix commits (`bbd731b` move-website-tests-out-of-synth,
+   `dd58bb6` backward-compat shims) auto-dropped during rebase as `patch contents already
+   upstream`. Force-pushed with lease. CDK build + tests green. The earlier prediction was
+   correct: pico commits replayed cleanly, no manual conflict resolution needed. Backup
+   branch `backup/pico-display-v2-pre-rebase` retained locally.
 
 **Key conflict resolutions in the v2 recreation** (for future reference):
 
