@@ -1,7 +1,7 @@
 # Upstream Merge Plan — SSM Cross-Stack Migration + Feature PRs
 
 **Generated:** 2026-04-03
-**Updated:** 2026-05-03
+**Updated:** 2026-05-04
 **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
 **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
 
@@ -226,7 +226,7 @@ merged in any order at any time.
 | PR | Title | Dependencies | Status |
 |---|---|---|---|
 | [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | None | ✅ Rebased on v3.0.4 2026-05-02 (`7a3ea2f`) — clean 3-way merge, sat alongside new `WebsiteTests` step |
-| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.4 + #184 2026-05-03 (`2163a7c`) — earlier 2026-05-02 rebase resolved real conflicts (dropped 2 deleted Dockerfiles, applied `--legacy-peer-deps` to consolidated docker runs in pipeline-stack, kept v3.0.4 same-origin URLs in `trackTable.tsx`, merged `avataaars` dep into `website/leaderboard/package.json`); 2026-05-03 rebase post-#184 was a clean 6-commit replay |
+| [#171](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/171) | feat: racer avatar, highlight colour, and identity display | None (adds Cognito attrs, leaderboard fields, overlay identity) | ✅ Rebased on v3.0.4 + #184 (`5a7a923`) — earlier 2026-05-02 rebase resolved real conflicts (dropped 2 deleted Dockerfiles, applied `--legacy-peer-deps` to consolidated docker runs in pipeline-stack, kept v3.0.4 same-origin URLs in `trackTable.tsx`, merged `avataaars` dep into `website/leaderboard/package.json`); 2026-05-03 rebase post-#184 was a clean 6-commit replay; **2026-05-04** added Steve Askwith's two pipeline fixes after a fork-pipeline test deploy — `--legacy-peer-deps` in WebsiteTests + PostDeployTests (avataaars React 17 peer), and made `ManualApproval` depend on `WebsiteTests` so approval doesn't appear until tests pass (was previously a parallel race) |
 | [#172](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/172) → [#201](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/201) | feat: Pico W Galactic Unicorn race display with OTA updates [v2] | Was hard-dep on #200 — now landed in v3.0.4 | ✅ Rebased onto v3.0.4 (2026-05-01) — 61 clean commits on `5e94d3d`; the two pipeline-fix commits (`bbd731b`, `dd58bb6`) auto-dropped during rebase as `patch contents already upstream` |
 | [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | None (leaderboard frontend only) — closes #40 | ✅ Rebased on v3.0.4 2026-05-02 (`76f6f7c`) — git auto-followed rename to `website/leaderboard/` |
 | [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments with test data | None (new `scripts/seed.py` + Makefile targets) | ✅ Rebased on v3.0.4 2026-05-02 (`9b5f9da`) — clean fast-forward |
@@ -254,9 +254,10 @@ merged in any order at any time.
   `lib/constructs/leaderboard.ts`, `lib/constructs/race-manager.ts`, and multiple Lambdas. It's the largest
   independent PR but has no CDK cross-stack changes that conflict with the SSM migration. Depends on #184 for
   the Dockerfile base image fix.
-- **#172 (pico display)** includes a workaround commit (`e7e9c48`) adding Cognito attributes to `idp.ts` to
-  match the deployed stack. This should be dropped if #171 merges first (the attributes will already be there).
-  If #172 merges first, the commit is harmless (additive).
+- **#172 → #201 (pico display)**: the original #172 included a workaround commit (`e7e9c48`) adding
+  Cognito attributes to `idp.ts` to match the deployed stack. The v2 recreation (#201) was rebuilt from
+  scratch and **does not** include this commit — Steve flagged it for removal post-#171, but it's already
+  absent. No action needed when #171 lands.
 - **#170 (optional approval)** touches `lib/cdk-pipeline-stack.ts` and `Makefile` — may need a trivial rebase
   if any SSM migration PR merges first, since they also touch those files.
 - **#183 (timer layout + auto timer status)** touches `racePage.tsx` and `racePageLite.tsx` which were also
