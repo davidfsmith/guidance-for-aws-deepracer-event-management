@@ -1,7 +1,7 @@
 # Upstream Merge Plan — SSM Cross-Stack Migration + Feature PRs
 
 **Generated:** 2026-04-03
-**Updated:** 2026-05-08
+**Updated:** 2026-05-08 (later)
 **Upstream:** `aws-solutions-library-samples/guidance-for-aws-deepracer-event-management`
 **Fork:** `davidfsmith/guidance-for-aws-deepracer-event-management`
 
@@ -37,6 +37,48 @@ down for the current commit SHA per branch.
 | ✅ Rebased + force-pushed clean  | 5     | #187, #188, #195, #196, #197                                     |
 | ✅ Manual conflict resolved      | 2     | #170 (`Makefile` — kept `$(require_approval_arg)` injection), #171 (`lib/cdk-pipeline-stack.ts` — kept upstream's extracted-step refactor + branch's `--legacy-peer-deps`) |
 | ✅ Recreated as fresh PR         | 2     | #168 → **#200** ✅ Merged in v3.0.4 (2026-04-30, commit `5e94d3d`). Originally 6 commits + 2 follow-up fixes on top of v3.0.3a; required two backward-compat shims (`dd58bb6`) after a customer hit the path-B upgrade failure (see §Pipeline self-mutation lessons below).<br>#172 → **#201** (`feat/pico-display-v2`, 61 clean commits on top of v3.0.4 after rebase 2026-05-01; old #172 closed as superseded) |
+
+---
+
+## Suggested next release — Tier 1 quick wins (recommended batch)
+
+Twelve open fork PRs that are low-risk, single-touch, and closeable in a single review pass. All authored by `@davidfsmith`. All are 3 commits behind current main (post-#203) — trivial `git rebase main` for each before merging.
+
+| PR | Title | Closes | Surface |
+|---|---|---|---|
+| [#195](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/195) | fix(leaderboard): handle null trackId in getLeaderboard resolver | [#194](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/194) | Single-Lambda fix |
+| [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | [#40](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/40) | Leaderboard frontend only |
+| [#181](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/181) | fix(race-admin): show track name and enable track filter | [#41](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/41) | Race admin frontend only |
+| [#182](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/182) | fix(overlays): align numbers and show gap to leader | [#44](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/44), [#54](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/54) | Stream overlays SVG/JS only |
+| [#183](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/183) | fix(timekeeper): auto timer status display and race page layout | [#60](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/60) | Timekeeper frontend + laps table config |
+| [#185](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/185) | fix: lazy-load user roles on admin users page | — | Lambda + CDK + frontend; additive |
+| [#178](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/178) | feat(models): drag and drop model upload using CloudScape FileUpload | [#38](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/38) | Single component swap |
+| [#179](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/179) | feat: dark mode and compact density toggle | [#36](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/36) | topNav + CSS only |
+| [#180](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/180) | feat(race-admin): CSV export of race data | — | New export utility + button |
+| [#177](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/177) | feat: data seed script for populating dev environments | — | New `scripts/seed.py` + Makefile targets |
+| [#170](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/170) | feat(pipeline): make manual approval step configurable | — | Pipeline-only, additive |
+| [#202](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/202) | chore: clean up v3.0.4 consolidation leftovers and tidy the Makefile | — | Mechanical cleanup (Makefile/tsconfig/.vscode/overlays package name); pretty `make help` |
+
+**Why this batch is safe to ship together:**
+
+- **Zero overlap between PRs** — every one of them touches a different file or concern. No coordination cost.
+- **All on ✅ Mergeable status** post-rebase against current main.
+- **Issues closed:** seven upstream issues (#36, #38, #40, #41, #44, #54, #60, #194) clear in one release.
+- **No schema changes** — none of these touch AppSync types, DynamoDB tables, or Cognito attributes. Means no codegen refresh required for any consumer.
+- **No CFN-resource removal** — pure additive or in-place edits, so v3.0.4 → next-release upgrade path is `cdk deploy` with no manual intervention.
+
+**Suggested merge order** (only ordering note — everything else is independent):
+
+- Merge `#170` first if you also want the optional-approval step in the next release; nothing technically depends on it.
+- Merge `#202` early so the Makefile tidy + `make help` improvements are available to anyone working on the larger Tier 3 PRs afterwards.
+- The other 10 can land in any order.
+
+**Held back from this batch (but worth knowing):**
+
+- `#201` (pico W display v2) — large, hardware-dependent feature; deserves its own release window.
+- `#186`, `#187`, `#188`, `#196`, `#197` — Tier 3 features; touch shared schema or large new constructs. Plan a separate release after Tier 1 ships.
+
+---
 
 **Notable findings from the audit:**
 
