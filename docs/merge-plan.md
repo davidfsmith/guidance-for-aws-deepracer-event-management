@@ -72,6 +72,12 @@ Second wave landed on 2026-05-10:
 | [#176](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/176) | fix(leaderboard): scroll to and highlight racer when race submitted | [#40](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/40) | ✅ **Merged** 2026-05-10 (`944b919`) — Steve-flagged follow-ups bundled in: new-finisher overlay clear of bottom entry (`805c96c` + `b97e9db`), back-to-top timer rescue at 60s (`2195e02`), highlight overflow past leaderboard borders (`8a92177`) |
 | [#199](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/199) | Fix NAGs for Custom Certificate | — | ✅ **Merged** 2026-05-10 (`d417299`) — upstream PR by Steve, not in fork backlog |
 
+Follow-up landed on 2026-05-11:
+
+| PR | Title | Closes | Status |
+|---|---|---|---|
+| [#208](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/pull/208) | fix(leaderboard): align avatars vertically for positions 4+ | [#207](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/207) | ✅ **Merged** 2026-05-11 (`e7daf6b`) — Steve diagnosed and pre-fixed in the issue: `.liIdentity` was inheriting `line-height: 4em` from `.entry`; reset to `1` so the flex item sizes to the avatar |
+
 The remaining four still-open Tier 1 PRs are listed below — all rebased onto post-#170
 main, mergeable, no schema/CFN-resource changes:
 
